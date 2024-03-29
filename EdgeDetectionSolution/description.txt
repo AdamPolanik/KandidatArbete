@@ -1,1 +1,2 @@
 Tjena, nu har jag klonat och comittar detta för att se om de funkar :DDDD
+Här kommer lite mer text på rad 2.
