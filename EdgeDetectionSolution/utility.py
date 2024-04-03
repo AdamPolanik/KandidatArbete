@@ -2,8 +2,6 @@ from tkinter import filedialog
 from tkinter import Tk
 import matplotlib.pyplot as plt
 import cv2
-import numpy as np
-
 
 def choose_picture():
     # Create a Tkinter root window
@@ -28,8 +26,6 @@ def openImage(file_path = None):
     return image
 
 def displayImage(image, title):
-    # Used for debug purpose
-    # print(image.dtype)
 
     # converts the image to rgb from bgr before display
     convertedImage = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -39,3 +35,18 @@ def displayImage(image, title):
     plt.title(title)
     plt.show()
 
+# Function to calculate accuracy (if a given point is in a boundingBox)
+def isInBox(boundingBox, point):
+    x, y = point
+    topLeftX, topLeftY = boundingBox.topLeft
+    bottomRightX, bottomRightY = boundingBox.bottomRight
+
+    # Check if the point is within the horizontal and vertical boundaries of the box
+    return (topLeftX <= x <= bottomRightX) and (topLeftY <= y <= bottomRightY)
+
+
+class BoundingBox:
+    def __init__(self, bottomRight, topLeft):
+        self.bottomRight = bottomRight
+        self.topLeft = topLeft
+    

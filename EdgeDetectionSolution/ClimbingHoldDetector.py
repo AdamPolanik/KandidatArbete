@@ -1,4 +1,4 @@
-from utility import choose_picture, openImage, displayImage
+from utility import choose_picture, openImage, displayImage, BoundingBox
 import cv2
 import math
 import numpy as np
@@ -9,8 +9,17 @@ import matplotlib.pyplot as plt
 def openFile():
     filePath = choose_picture()
     image = openImage(filePath)
+    resizeImage(image)
+
     return image
 
+def resizeImage(image):
+    # Resizing image to speed up processing
+    c = 1000.0/image.shape[0]
+    x = int(image.shape[0] * c)
+    y = int(image.shape[1] * c)
+    image = cv2.resize(image, (y,x))
+    return image
 
 """Computational functions calculating where holds are located"""
 
@@ -24,15 +33,16 @@ def findEdges(image):
 
     # Applies Otsu's thresholding method to choose threshold values.
     threshold, _ = cv2.threshold(grayImage, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    print(threshold)
 
     # Applies Canny edge detection to find edges separating holds from the wall.
-    edges = cv2.Canny(blurredImage, threshold, threshold * 2)
+    edges = cv2.Canny(blurredImage, 100, 100 * 2, L2gradient=True)
 
 
     # !!!Adjust code under this comment to change accuracy!!!
 
 
-    # Finds the contours of the image, discarding hierarchy
+    # Finds the contours of the image, discarding hierarchy (test with cv2.RETR_TREE)
     contours, _ = cv2.findContours(edges,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
 
     # Applies convex hulls to each contour, ensuring each contour is a closed polygon. 
@@ -42,45 +52,51 @@ def findEdges(image):
     mask = np.zeros(image.shape, np.uint8)
     cv2.drawContours(mask, hulls, -1, [255,255,255], -1)
 
-
     # Under this comment is 3 different ways of extracting keypoints, don't know which one is the best right now.
 
     # Apply dilation to fill in the outlines
-    kernel = np.ones((5,5),np.uint8)
-    dilated = cv2.dilate(edges, kernel, iterations = 1)
-    dilated2 = cv2.dilate(mask, kernel, iterations = 1)
+    # kernel = np.ones((5,5),np.uint8)
 
-    blobDetectorTest = buildDetector()
-    keypointsTest = blobDetectorTest.detect(dilated)
+    # closed_edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
 
-    blobDetectorTest2 = buildDetector()
-    keypointsTest2 = blobDetectorTest2.detect(dilated2)
+    # dilated = cv2.dilate(edges, kernel, iterations = 1)
+
+    # blobDetectorTest = buildDetector()
+    # keypointsTest = blobDetectorTest.detect(dilated)
+
+    # blobDetectorTest3 = buildDetector()
+    # keypointsTest3 = blobDetectorTest3.detect(closed_edges)
 
     # Utilising simpleblobtdetector on the mask to define keypoints (Original way).
     blobDetector = buildDetector()
     keypoints = blobDetector.detect(mask)
 
-    # Debug purpose, shows the image representing the dialated-mask.
-    drawImage(dilated, "Image showing dialation")
+    # drawImage(closed_edges, "Image showing closedEdges using morphology")
+
+    # drawImage(mask, "Image showing convexHullMask")
+
+    # # Debug purpose, shows the image representing the dialated-mask.
+    # drawImage(dilated, "Image showing dialation")
 
 
-    # Convert the image to grayscale
-    grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # Create a black and white image with the keypoints
-    keypointsImage = cv2.drawKeypoints(grayImage, keypointsTest, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    # Debug purpose, shows the image representing the Keypoints.
-    drawImage(keypointsImage, "Image showing dialated-keypoints using edge-dialation")
+    # # Convert the image to grayscale
+    # grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # # Create a black and white image with the keypoints
+    # keypointsImage = cv2.drawKeypoints(grayImage, keypointsTest, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    # # Debug purpose, shows the image representing the Keypoints.
+    # drawImage(keypointsImage, "Image showing dialated-keypoints using edge-dialation")
 
-    # Create a black and white image with the keypoints
-    keypointsImage = cv2.drawKeypoints(grayImage, keypointsTest2, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    # Debug purpose, shows the image representing the Keypoints.
-    drawImage(keypointsImage, "Image showing dialated-keypoints using mask-dialation")
+    # # Create a black and white image with the keypoints
+    # keypointsImage = cv2.drawKeypoints(grayImage, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    # # Debug purpose, shows the image representing the Keypoints.
+    # drawImage(keypointsImage, "Image showing keypoints using no dialation")
 
-    # Create a black and white image with the keypoints
-    keypointsImage = cv2.drawKeypoints(grayImage, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    # Debug purpose, shows the image representing the Keypoints.
-    drawImage(keypointsImage, "Image showing keypoints using no dialation")
+    # # Create a black and white image with the keypoints
+    # keypointsImage = cv2.drawKeypoints(grayImage, keypointsTest3, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    # # Debug purpose, shows the image representing the Keypoints.
+    # drawImage(keypointsImage, "Image showing keypoints using morphology")
 
+    # draw(image, keypointsTest3)
 
     return keypoints
 
@@ -124,6 +140,9 @@ def buildDetector(minArea = 25):
 # Draws bounding boxes around each hold according to keypoints information.
 def draw(img, keypoints):
 
+    # List that holds the coordinates for each boundingBox
+    boundingBoxes = []
+
     for i, key in enumerate(keypoints):
         # Gets the x and y coordinates for the keypoint
         x = int(key.pt[0])
@@ -136,11 +155,18 @@ def draw(img, keypoints):
         bottomRight = (x + size, y + size)   
         topLeft = (x - size, y - size)
 
+        boundingBox = BoundingBox(bottomRight,topLeft)
+
+        # Adds coordinates for boundingBox to list
+        boundingBoxes.append(boundingBox)
+
         # Draws a rectangle around the keypoint
         cv2.rectangle(img, topLeft, bottomRight, (0,0,255), 2)
 
     # Displays the results
     drawImage(img, "Image with boundingBoxes")
+    
+    return boundingBoxes
 
 
 def drawImage(image, title):
