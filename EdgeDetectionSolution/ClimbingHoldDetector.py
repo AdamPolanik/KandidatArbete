@@ -1,3 +1,4 @@
+import os
 from utility import choose_picture, openImage, displayImage, BoundingBox
 import cv2
 import math
@@ -33,7 +34,7 @@ def findEdges(image):
 
     # Applies Otsu's thresholding method to choose threshold values.
     threshold, _ = cv2.threshold(grayImage, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    print(threshold)
+    # print(threshold)
 
     # Applies Canny edge detection to find edges separating holds from the wall.
     edges = cv2.Canny(blurredImage, 100, 100 * 2, L2gradient=True)
@@ -54,7 +55,7 @@ def findEdges(image):
 
     # Under this comment is 3 different ways of extracting keypoints, don't know which one is the best right now.
 
-    # Apply dilation to fill in the outlines
+    # # Apply dilation to fill in the outlines
     # kernel = np.ones((5,5),np.uint8)
 
     # closed_edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
@@ -164,10 +165,42 @@ def draw(img, keypoints):
         cv2.rectangle(img, topLeft, bottomRight, (0,0,255), 2)
 
     # Displays the results
-    drawImage(img, "Image with boundingBoxes")
+    # drawImage(img, "Image with boundingBoxes")
     
     return boundingBoxes
 
-
 def drawImage(image, title):
     displayImage(image, title)
+
+
+def openImagesForModel(folder_path):
+    imageData = {}
+
+    if not os.path.exists(folder_path):
+        print(f"Error: Folder '{folder_path}' does not exist.")
+        return None
+
+    # Iterate through all files in the folder
+    for filename in os.listdir(folder_path):
+
+        # Check for valid image extensions
+        if filename.lower().endswith((".jpg", ".jpeg", ".png")):
+            
+            # print("filename inside .jpg:    ", filename)
+            image_path = os.path.join(folder_path, filename)
+
+            # print("Image path: ", image_path)
+            try:
+                image = cv2.imread(image_path, 1)  # Read in color mode
+
+            except (cv2.error, FileNotFoundError) as e:
+                print(f"Error opening image '{image_path}': {e}")
+                image = None
+            boundingboxes = []
+
+            edges = findEdges(image)
+            boundingboxes = draw(image, edges)
+
+            imageData[image_path] = boundingboxes
+
+    return imageData

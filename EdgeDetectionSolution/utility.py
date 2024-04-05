@@ -2,6 +2,7 @@ from tkinter import filedialog
 from tkinter import Tk
 import matplotlib.pyplot as plt
 import cv2
+import os
 
 def choose_picture():
     # Create a Tkinter root window
@@ -24,6 +25,60 @@ def openImage(file_path = None):
 
     image = cv2.imread(file_path,1)
     return image
+
+
+def open_images_and_coordinates(folder_path):
+
+    image_data = {}
+    # Check if folder exists
+    if not os.path.exists(folder_path):
+        print(f"Error: Folder '{folder_path}' does not exist.")
+        return None
+
+    # Iterate through all files in the folder
+    for filename in os.listdir(folder_path):
+
+        # Check for valid image extensions
+        if filename.lower().endswith((".jpg", ".jpeg", ".png")):
+            
+            # print("filename inside .jpg:    ", filename)
+            image_path = os.path.join(folder_path, filename)
+
+            # print("Image path: ", image_path)
+            try:
+                image = cv2.imread(image_path, 1)  # Read in color mode
+
+            except (cv2.error, FileNotFoundError) as e:
+                print(f"Error opening image '{image_path}': {e}")
+                image = None
+
+            changedExtention = image_path[:-3]
+            coord_path = changedExtention + "txt"
+            coordinates = []
+            try:
+                with open(coord_path, 'r') as f:
+
+                    # Extract and process all remaining coordinates
+                    for line in f:  # Iterate through all lines
+                        line = line.strip()
+                        _, x_center_normalized, y_center_normalized, _, _ = map(float, line.split())
+
+                        if image is not None:
+                            x = int(x_center_normalized * image.shape[1])
+                            y = int(y_center_normalized * image.shape[0])
+                            # print("Coordinates for image: ", x, " ", y)
+                            
+                            coordinates.append((x, y))
+            except (FileNotFoundError, ValueError, StopIteration) as e:
+                print(f"Error reading coordinates for '{filename}': {e}")
+
+            image_data[image_path] = coordinates
+
+    return image_data
+
+
+
+
 
 def displayImage(image, title):
 
