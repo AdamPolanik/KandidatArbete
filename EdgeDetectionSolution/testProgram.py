@@ -1,6 +1,11 @@
 import cv2
 import ClimbingHoldDetector as holdDetector
+import time
 from utility import isInBox, open_images_and_coordinates, openImage, displayImage
+
+start_time = time.time()
+
+totalAccuracy = 0
 
 pictureFolderPath = "/home/addedoom/skola/Climbing Holds and Volumes.v14i.yolov8/test/images_and_labels/"
 image_data = open_images_and_coordinates(pictureFolderPath)
@@ -13,17 +18,27 @@ if detectedHoldsFromModel is not None:
         amountOfCorrectIdentifications = 0
         # Check if coordinates loaded successfully
         coordinates = image_data.get(filePath)
+        maxAmountOfHolds = len(coordinates)
 
         for box in boundingBox:
             for cord in coordinates:
                 if (isInBox(box, cord)):
-                    amountOfCorrectIdentifications += 1
-        print(amountOfCorrectIdentifications, " out of ", len(coordinates), " accuracy of: ", f"{amountOfCorrectIdentifications/len(coordinates):.5f}")
+                    if (amountOfCorrectIdentifications < maxAmountOfHolds):
+                        amountOfCorrectIdentifications += 1
+                    else:
+                        break
+        # print(amountOfCorrectIdentifications, " out of ", len(coordinates), " accuracy of: ", f"{amountOfCorrectIdentifications/len(coordinates):.5f}")
+        totalAccuracy += (amountOfCorrectIdentifications/len(coordinates))
 else:
     print("No images or coordinates found in the specified folder.")
 
+totalAccuracy = (totalAccuracy/len(detectedHoldsFromModel))
+print("EDGE_DETECTION_MODEL> Total accuracy of model: ", totalAccuracy, " amount of images used: ", len(detectedHoldsFromModel))
 
+end_time = time.time()
 
+runtime = end_time - start_time
+print(f"Runtime: {runtime:.2f} seconds")
 
 # if image_data is not None:
 #     # Process the dictionary containing coordinates:
