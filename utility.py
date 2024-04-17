@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import cv2
 import os
 
+colors = ["#f6b3d3", "#e4026f", "#009ce9", "#1ca884", "#ffba13"]
+
 def choose_picture():
     # Create a Tkinter root window
     root = Tk()
@@ -86,8 +88,35 @@ def isInBox(boundingBox, point):
     topLeftX, topLeftY = boundingBox.topLeft
     bottomRightX, bottomRightY = boundingBox.bottomRight
 
-    # Check if the point is within the horizontal and vertical boundaries of the box
-    return (topLeftX <= x <= bottomRightX) and (topLeftY <= y <= bottomRightY)
+    # if ((topLeftX <= x <= bottomRightX) and (topLeftY <= y <= bottomRightY)):
+        
+    # Check if the point is within the horizontal and vertical boundaries of a box at a choosen subarea of the boundingbox
+    return isCorrectBoundingbox(topLeftX, topLeftY, bottomRightX, bottomRightY, x, y)
+
+def isCorrectBoundingbox(topLeftX, topLeftY, bottomRightX, bottomRightY, pointX, pointY):
+
+    xLength = (abs(topLeftX - bottomRightX)/2)
+    yLength = (abs(topLeftY - bottomRightY)/2)
+
+    # How big the box should be compared to the boundingbox
+    checkAreaProcentage = 0.5
+
+    xLength = xLength*checkAreaProcentage
+    yLength = yLength*checkAreaProcentage
+
+    rightX = pointX + xLength
+    leftX = pointX - xLength
+    topY = pointY + yLength
+    bottomY = pointY - yLength
+
+    # if ((topLeftX <= (leftX and rightX) <= bottomRightX) and (topLeftY <= (bottomY and topY) <= bottomRightY))
+
+    if((topLeftX <= leftX  <= bottomRightX)):
+        if ((topLeftX <= rightX <= bottomRightX)):
+            if ((topLeftY <= bottomY  <= bottomRightY)):
+                if ((topLeftY <= topY <= bottomRightY)):
+                    return True
+    return False
 
 class BoundingBox:
     def __init__(self, bottomRight, topLeft):

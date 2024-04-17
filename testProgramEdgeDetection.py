@@ -1,14 +1,16 @@
-import cv2
 import ClimbingHoldDetector as holdDetector
 import time
 import matplotlib.pyplot as plt
-from utility import isInBox, open_images_and_coordinates
+from utility import isInBox, open_images_and_coordinates, colors
 
-plotPoints = []
+correctHoldPlotPoints = []
+correctBoxPlotPoints = []
+totalAccuracyPlotPoints = []
 
 start_time = time.time()
 
 totalAccuracy = 0
+totalWrongIdentifications = 0
 
 pictureFolderPath = "/home/addedoom/skola/Climbing Holds and Volumes.v14i.yolov8/test/images_and_labels/"
 image_data = open_images_and_coordinates(pictureFolderPath)
@@ -20,6 +22,8 @@ if detectedHoldsFromModel is not None:
     for filePath, boundingBox in detectedHoldsFromModel.items():
 
         amountOfCorrectIdentifications = 0
+        amountOfDoubleIdentifications = 0
+        incorrectIdentifications = 0
         # Check if coordinates loaded successfully
         coordinates = image_data.get(filePath)
         maxAmountOfHolds = len(coordinates)
@@ -27,18 +31,28 @@ if detectedHoldsFromModel is not None:
         for box in boundingBox:
             for cord in coordinates:
                 if (isInBox(box, cord)):
-                    if (amountOfCorrectIdentifications < maxAmountOfHolds):
-                        amountOfCorrectIdentifications += 1
-                    else:
-                        break
-        # print(amountOfCorrectIdentifications, " out of ", len(coordinates), " accuracy of: ", f"{amountOfCorrectIdentifications/len(coordinates):.5f}")
-        currentAccuracy = (amountOfCorrectIdentifications/len(coordinates))
+                    amountOfCorrectIdentifications += 1
+                    coordinates.remove(cord)
+                    break                   
+                    
+        correctlyIdentifiedHolds = (amountOfCorrectIdentifications/maxAmountOfHolds)
+        incorrectIdentifications = ((len(boundingBox) - amountOfCorrectIdentifications)) / len(boundingBox)
+        correctIdentifications = 1 - incorrectIdentifications
+        currentAccuracy = correctlyIdentifiedHolds * correctIdentifications
         totalAccuracy += currentAccuracy
 
-        plotPoints.append([0,currentAccuracy])
+        correctHoldPlotPoints.append(correctlyIdentifiedHolds)
+        correctBoxPlotPoints.append(correctIdentifications)
+        totalAccuracyPlotPoints.append(currentAccuracy)
 
 else:
     print("No images or coordinates found in the specified folder.")
+
+
+
+"""For showing results and ploting graphs"""
+
+
 
 totalAccuracy = (totalAccuracy/len(detectedHoldsFromModel))
 print("EDGE_DETECTION_MODEL> Total accuracy of model: ", totalAccuracy, " amount of images used: ", len(detectedHoldsFromModel))
@@ -48,43 +62,102 @@ end_time = time.time()
 runtime = end_time - start_time
 print(f"Runtime: {runtime:.2f} seconds")
 
-plt.figure(1)
-plt.xlabel('Image')
-plt.ylabel('Accuracy (0-1)')
-plt.title('Detection accuracy per Image')
-plt.suptitle('Edge-detection Model')
-plt.grid(True)
-plt.plot(plotPoints)
 
 sum = 0
 
-for accuracy in plotPoints:
-    sum += accuracy[1]
+for accuracy in correctHoldPlotPoints:
+    sum += accuracy
 
-# Calculate the average time
-averageAccuracy = (sum / len(plotPoints))
-plt.axhline(y=round(averageAccuracy, 3), color='g', linestyle='--', label='Average Accuracy (' + str(round(averageAccuracy, 3)) + ')')
-plt.legend()
-
-plt.figure(2)
-plt.xlabel('Image')
-plt.ylabel('Time (seconds)')
-plt.title('Processing time per Image')
-plt.suptitle('Edge-detection Model')
-plt.grid(True)
-plt.plot(timePlotPoints)
+averageHoldAccuracy = (sum / len(correctHoldPlotPoints))
 
 sum = 0
 
-for time in timePlotPoints:
-    sum += time[1]
+for accuracy in correctBoxPlotPoints:
+    sum += accuracy
 
-# Calculate the average time
+averageBoxAccuracy = (sum / len(correctBoxPlotPoints))
+
+sum = 0
+
+for accuracy in totalAccuracyPlotPoints:
+    sum += accuracy
+
+averageAccuracy = (sum / len(totalAccuracyPlotPoints))
+
+sum = 0
+
+for times in timePlotPoints:
+    sum += times
+
 averageTime = (sum / len(timePlotPoints))
 
-plt.axhline(y=round(averageTime, 3), color='g', linestyle='--', label='Average Time (' + str(round(averageTime, 3)) + ')')
 
+
+fig, axs = plt.subplots(2, 2, figsize=(12, 10))
+axs[0, 0].plot(
+    correctHoldPlotPoints, color=colors[4], linestyle="-", label="Hold accuracy"
+)
+axs[0, 0].axhline(
+    y=round(averageHoldAccuracy, 3),
+    color='g', 
+    linestyle='--', 
+    label='Average accuracy (' + str(round(averageHoldAccuracy, 3)) + ')'
+    )
+
+axs[0, 0].set_xlabel("Image")
+axs[0, 0].set_ylabel("Identification accuracy")
+axs[0, 0].set_title("Correctly identified holds")
+axs[0, 0].legend()
+
+axs[0, 1].plot(
+    correctBoxPlotPoints, color=colors[1], linestyle="-", label="Boundingbox accuracy"
+)
+axs[0, 1].axhline(
+    y=round(averageBoxAccuracy, 3),
+    color='g', 
+    linestyle='--', 
+    label='Average accuracy (' + str(round(averageBoxAccuracy, 3)) + ')'
+    )
+
+axs[0, 1].set_xlabel("Image")
+axs[0, 1].set_ylabel("Identification accuracy")
+axs[0, 1].set_title("Correctly placed boundingboxes")
+axs[0, 1].legend()
+
+axs[1, 0].plot(
+    timePlotPoints, color=colors[2], linestyle="-", label="Time (s)"
+)
+axs[1, 0].axhline(
+    y=round(averageTime, 3),
+    color='g', 
+    linestyle='--', 
+    label='Average time (' + str(round(averageTime, 3)) + ')'
+    )
+
+axs[1, 0].set_xlabel("Image")
+axs[1, 0].set_ylabel("Time (s)")
+axs[1, 0].set_title("Execution time")
+axs[1, 0].legend()
+
+axs[1, 1].plot(
+    totalAccuracyPlotPoints, color=colors[3], linestyle="-", label="Accuracy"
+)
+axs[1, 1].axhline(
+    y=round(averageAccuracy, 3),
+    color='g', 
+    linestyle='--', 
+    label='Average accuracy (' + str(round(averageAccuracy, 3)) + ')'
+    )
+
+axs[1, 1].set_xlabel("Image")
+axs[1, 1].set_ylabel("Accuracy")
+axs[1, 1].set_title("Total model Accuracy")
+axs[1, 1].legend()
+
+# plt.tight_layout()
+
+plt.suptitle("Edge-detection model")
 plt.legend()
-
+#plt.savefig("Edge-detection-plot.png")
 plt.show()
 

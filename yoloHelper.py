@@ -4,7 +4,7 @@ import time
 import cv2
 from utility import openImage, BoundingBox, displayImage
 
-model = YOLO("YOLOV8MODEL.pt")
+model = YOLO("YOLOV8MODEL_60EPOCHS.pt")
 
 def getBoundingboxes(results, image):
     boxes = []
@@ -23,7 +23,7 @@ def getBoundingboxes(results, image):
         boxes.append(box)
 
     # to show image
-    displayImage(image, "YOLO")
+    #displayImage(image, "YOLO")
 
     return boxes
 
@@ -55,7 +55,7 @@ def openImagesForModel(folder_path):
 
             timeSpent = end - start
 
-            timePlotPoints.append([0, timeSpent])
+            timePlotPoints.append(timeSpent)
 
             imageData[image_path] = boundingboxes
 
