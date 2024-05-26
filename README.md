@@ -34,6 +34,9 @@ cd KandidatArbete
 
 # Install missing dependencies
 
+# Update filepath for folder containing images and labels in class: testProgramYOLO.py and testProgramEdgeDetection.py
+pictureFolderPath = "Path_to_images_and_textfiles_containing_information_about_holdplacement"
+
 # Run YOLO-detection 
 python3 testProgramYOLO.py
 
@@ -50,4 +53,5 @@ Another limitation pertained to the training dataset used for the YOLO model. Th
 
 ## Acknowledgements
 Supervisor: Mateus De Oliveira Oliveira
+
 University: Stockholm University - Department of Computer and Systems Sciences
