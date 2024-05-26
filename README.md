@@ -5,8 +5,8 @@
 - [Objectives](#objectives)
 - [Technologies Used](#technologies-used)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Limitations](#Limitations)
+- [Results](#results)
+- [Limitations](#limitations)
 - [Acknowledgements](#acknowledgements)
 
 ## Introduction
@@ -44,7 +44,12 @@ python3 testProgramYOLO.py
 python3 testProgramEdgeDetection.py
 
 ```
-## Usage
+## Results
+![Edge Detection Example](EDGE_DETECTION_PLOT.png)
+*Figure 1: Example of climbing hold detection metrics using edge detection algorithm.*
+
+![YOLO Detection Example](YOLO_PLOT.png)
+*Figure 2: Example of climbing hold detection metrics using YOLO model.*
 
 ## Limitations
 A big limiting factor for this study is the very simple implementation of the edge-detection based detection model. A more advanced implementation or the use of a different edge detection algorithm might have yielded better results. Additionally, incorporating color information, given the bright and saturated colors of climbing holds, could potentially enhance the performance of the edge detection approach. Parameters in the blobDetector could also be fine tuned to increase accuracy.
