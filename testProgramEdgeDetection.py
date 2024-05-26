@@ -7,20 +7,23 @@ correctHoldPlotPoints = []
 correctBoxPlotPoints = []
 totalAccuracyPlotPoints = []
 
+# For debugging
 start_time = time.time()
 
 totalAccuracy = 0
 totalWrongIdentifications = 0
 
-pictureFolderPath = "/home/addedoom/skola/Climbing Holds and Volumes.v14i.yolov8/test/images_and_labels/"
+# Path to test-folder (should contain image + textfile combination, with the same name, in yolo-format, for each image in the folder)
+pictureFolderPath = "Path_to_images_and_textfiles_containing_information_about_holdplacement"
 image_data = open_images_and_coordinates(pictureFolderPath)
 
+# Does the detection for each image in the folder
 detectedHoldsFromModel, timePlotPoints = holdDetector.openImagesForModel(pictureFolderPath)
 
+# The code below calculates performance mesurements for the model
 if detectedHoldsFromModel is not None:
     # Process the dictionary containing coordinates:
     for filePath, boundingBox in detectedHoldsFromModel.items():
-
         amountOfCorrectIdentifications = 0
         amountOfDoubleIdentifications = 0
         incorrectIdentifications = 0
@@ -52,43 +55,33 @@ else:
 
 """For showing results and ploting graphs"""
 
-
-
 totalAccuracy = (totalAccuracy/len(detectedHoldsFromModel))
+
+# For debugging
 print("EDGE_DETECTION_MODEL> Total accuracy of model: ", totalAccuracy, " amount of images used: ", len(detectedHoldsFromModel))
-
 end_time = time.time()
-
 runtime = end_time - start_time
 print(f"Runtime: {runtime:.2f} seconds")
 
 
 sum = 0
-
 for accuracy in correctHoldPlotPoints:
     sum += accuracy
-
 averageHoldAccuracy = (sum / len(correctHoldPlotPoints))
 
 sum = 0
-
 for accuracy in correctBoxPlotPoints:
     sum += accuracy
-
 averageBoxAccuracy = (sum / len(correctBoxPlotPoints))
 
 sum = 0
-
 for accuracy in totalAccuracyPlotPoints:
     sum += accuracy
-
 averageAccuracy = (sum / len(totalAccuracyPlotPoints))
 
 sum = 0
-
 for times in timePlotPoints:
     sum += times
-
 averageTime = (sum / len(timePlotPoints))
 
 
@@ -154,10 +147,9 @@ axs[1, 1].set_ylabel("Accuracy")
 axs[1, 1].set_title("Total model Accuracy")
 axs[1, 1].legend()
 
-# plt.tight_layout()
-
 plt.suptitle("Edge-detection model")
 plt.legend()
-#plt.savefig("Edge-detection-plot.png")
 plt.show()
+
+#plt.savefig("Edge-detection-plot.png")
 

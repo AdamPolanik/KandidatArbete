@@ -26,8 +26,17 @@ def openImage(file_path = None):
         return None
 
     image = cv2.imread(file_path,1)
+    # image = resizeImage(image)
+
     return image
 
+def resizeImage(image):
+    # Resizing image to speed up processing
+    c = 1000.0/image.shape[0]
+    x = int(image.shape[0] * c)
+    y = int(image.shape[1] * c)
+    image = cv2.resize(image, (y,x))
+    return image
 
 def open_images_and_coordinates(folder_path):
 
@@ -82,17 +91,16 @@ def displayImage(image, title):
     plt.title(title)
     plt.show()
 
-# Function to calculate accuracy (if a given point is in a boundingBox)
+# Function to check if a boundingbox placement is correct
 def isInBox(boundingBox, point):
     x, y = point
     topLeftX, topLeftY = boundingBox.topLeft
     bottomRightX, bottomRightY = boundingBox.bottomRight
-
-    # if ((topLeftX <= x <= bottomRightX) and (topLeftY <= y <= bottomRightY)):
         
     # Check if the point is within the horizontal and vertical boundaries of a box at a choosen subarea of the boundingbox
     return isCorrectBoundingbox(topLeftX, topLeftY, bottomRightX, bottomRightY, x, y)
 
+# Function that creates a sub box at a given procentage of the placed boundingbox, then checks if the sub box is within the boundingbox
 def isCorrectBoundingbox(topLeftX, topLeftY, bottomRightX, bottomRightY, pointX, pointY):
 
     xLength = (abs(topLeftX - bottomRightX)/2)
@@ -109,8 +117,7 @@ def isCorrectBoundingbox(topLeftX, topLeftY, bottomRightX, bottomRightY, pointX,
     topY = pointY + yLength
     bottomY = pointY - yLength
 
-    # if ((topLeftX <= (leftX and rightX) <= bottomRightX) and (topLeftY <= (bottomY and topY) <= bottomRightY))
-
+    # Checks if the smaller box is inside of the boundingbox
     if((topLeftX <= leftX  <= bottomRightX)):
         if ((topLeftX <= rightX <= bottomRightX)):
             if ((topLeftY <= bottomY  <= bottomRightY)):
@@ -123,7 +130,6 @@ class BoundingBox:
         self.bottomRight = bottomRight
         self.topLeft = topLeft
     
-
 def open_images(folder_path):
 
     images = []
@@ -140,7 +146,6 @@ def open_images(folder_path):
             
             # print("filename inside .jpg:    ", filename)
             image_path = os.path.join(folder_path, filename)
-
             image = openImage(image_path)
             images.append(image)
     

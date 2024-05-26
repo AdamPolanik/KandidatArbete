@@ -11,16 +11,18 @@ start_time = time.time()
 
 totalAccuracy = 0
 
-pictureFolderPath = "/home/addedoom/skola/Climbing Holds and Volumes.v14i.yolov8/test/images_and_labels/"
+# Path to test-folder (should contain image + textfile combination, with the same name, in yolo-format, for each image in the folder)
+pictureFolderPath = "Path_to_images_and_textfiles_containing_information_about_holdplacement"
 image_data = open_images_and_coordinates(pictureFolderPath)
 
+# Does the detection for each image in the folder
 detectedHoldsFromModel, timePlotPoints = yolo.openImagesForModel(pictureFolderPath)
 
+# The code below calculates performance mesurements for the model
 if detectedHoldsFromModel is not None:
     # Process the dictionary containing coordinates:
     for filePath, boundingBox in detectedHoldsFromModel.items():
 
-        
         amountOfCorrectIdentifications = 0
         amountOfDoubleIdentifications = 0
         incorrectIdentifications = 0
@@ -41,6 +43,7 @@ if detectedHoldsFromModel is not None:
         currentAccuracy = correctlyIdentifiedHolds * correctIdentifications
         totalAccuracy += currentAccuracy
 
+        # To find out which pictures the model performs bad on
         # if (currentAccuracy < 0.5):
         #     displayImage(openImage(filePath), "Image with trash accuracy")
 
@@ -65,33 +68,24 @@ print(f"Runtime: {runtime:.2f} seconds")
 
 
 sum = 0
-
 for accuracy in correctHoldPlotPoints:
     sum += accuracy
-
 averageHoldAccuracy = (sum / len(correctHoldPlotPoints))
 
 sum = 0
-
 for accuracy in correctBoxPlotPoints:
     sum += accuracy
-
 averageBoxAccuracy = (sum / len(correctBoxPlotPoints))
 
 sum = 0
-
 for accuracy in totalAccuracyPlotPoints:
     sum += accuracy
-
 averageAccuracy = (sum / len(totalAccuracyPlotPoints))
 
 sum = 0
-
 for times in timePlotPoints:
     sum += times
-
 averageTime = (sum / len(timePlotPoints))
-
 
 
 fig, axs = plt.subplots(2, 2, figsize=(12, 10))
@@ -160,49 +154,3 @@ plt.legend()
 plt.show()
 
 # plt.savefig("YOLO-plot.png")
-
-
-
-
-# plt.figure(1)
-# plt.xlabel('Image')
-# plt.ylabel('Accuracy (0-1)')
-# plt.title('Detection accuracy per Image')
-# plt.suptitle('Edge-detection Model')
-# plt.grid(True)
-# plt.plot(totalAccuracyPlotPoints)
-# plt.plot(correctHoldPlotPoints, ':')
-# plt.plot(correctBoxPlotPoints, '-')
-
-# sum = 0
-
-# for accuracy in totalAccuracyPlotPoints:
-#     sum += accuracy[1]
-
-# # Calculate the average time
-# averageAccuracy = (sum / len(totalAccuracyPlotPoints))
-# plt.axhline(y=round(averageAccuracy, 3), color='g', linestyle='--', label='Average Accuracy (' + str(round(averageAccuracy, 3)) + ')')
-# plt.legend()
-
-# plt.figure(2)
-# plt.xlabel('Image')
-# plt.ylabel('Time (seconds)')
-# plt.title('Processing time per Image')
-# plt.suptitle('YOLO Model')
-# plt.grid(True)
-# plt.plot(timePlotPoints)
-
-# sum = 0
-
-# for time in timePlotPoints:
-#     sum += time[1]
-
-# # Calculate the average time
-# averageTime = (sum / len(timePlotPoints))
-
-# plt.axhline(y=round(averageTime, 3), color='g', linestyle='--', label='Average Time (' + str(round(averageTime, 3)) + ')')
-
-# plt.legend()
-
-# plt.show()
-

@@ -17,9 +17,7 @@ def getBoundingboxes(results, image):
 
         # to print boundingbox
         cv2.rectangle(image, topLeft, bottomright, (0,0,255), 2)
-
         box = BoundingBox(bottomright, topLeft)
-
         boxes.append(box)
 
     # to show image
@@ -43,7 +41,6 @@ def openImagesForModel(folder_path):
             
             image_path = os.path.join(folder_path, filename)
             image = openImage(image_path)
-
             boundingboxes = []
 
             start = time.time()
@@ -54,9 +51,7 @@ def openImagesForModel(folder_path):
             end = time.time()
 
             timeSpent = end - start
-
             timePlotPoints.append(timeSpent)
-
             imageData[image_path] = boundingboxes
 
     return imageData, timePlotPoints

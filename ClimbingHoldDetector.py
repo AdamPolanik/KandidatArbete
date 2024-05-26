@@ -36,57 +36,14 @@ def findEdges(image):
     # Applies Otsu's thresholding method to choose threshold values.
     threshold, _ = cv2.threshold(grayImage, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    # # Applies Canny edge detection to find edges separating holds from the wall.
-    # edges = cv2.Canny(blurredImage, threshold, threshold * 2, L2gradient=False)
-
-    # # Finds the contours of the image, discarding hierarchy (test with cv2.RETR_TREE)
-    # contours, _ = cv2.findContours(edges,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
-
-
     # Convert the image to HSV color space
-    hsvImage = cv2.cvtColor(blurredImage, cv2.COLOR_BGR2HSV)
-
-    # Define color ranges for climbing holds
-    color_ranges = [
-        ((40, 50, 50), (80, 255, 255)),   # Green
-        ((0, 100, 100), (10, 255, 255)),  # Red (Part 1)
-        ((170, 100, 100), (180, 255, 255)),  # Red (Part 2)
-        ((120, 50, 50), (160, 255, 255)),  # Purple
-        ((20, 100, 100), (40, 255, 255)),  # Yellow
-        ((90, 50, 50), (130, 255, 255))   # Blue
-    ]
-
-
-    # Create binary masks for each color range
-    masks = []
-    for color_range in color_ranges:
-        lower_color, upper_color = color_range
-        mask = cv2.inRange(hsvImage, lower_color, upper_color)
-        masks.append(mask)
-
-
-    # Initialize an empty mask
-    combined_mask = np.zeros_like(masks[0])
-
-    # Combine binary masks using bitwise OR operation
-    for mask in masks:
-        combined_mask = cv2.bitwise_or(combined_mask, mask)
+    # hsvImage = cv2.cvtColor(blurredImage, cv2.COLOR_BGR2HSV)
 
     # Apply Canny edge detection on the original image
     edges = cv2.Canny(blurredImage, threshold, threshold * 2, L2gradient=False)
 
-    # Perform morphological operations to improve blob detection
-    # kernel = np.ones((5, 5), np.uint8)
-    # dilated_edges = cv2.dilate(edges, kernel, iterations=2)
-
-    # Combine color segmentation and edge detection results
-    combined_edges = cv2.bitwise_and(combined_mask, edges)
-
     # Finds the contours of the image, discarding hierarchy (test with cv2.RETR_TREE)
     contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-
-
-
 
     # Applies convex hulls to each contour, ensuring each contour is a closed polygon. 
     hulls = list(map(cv2.convexHull, contours))
@@ -95,18 +52,9 @@ def findEdges(image):
     mask = np.zeros(image.shape, np.uint8)
     cv2.drawContours(mask, hulls, -1, [255,255,255], -1)
 
-
-    # drawImage(image, "original image")
-    # drawImage(combined_mask, "color segmentation")
-    # drawImage(edges, "edge detection")
-    # drawImage(combined_edges, "combination")
-    # drawImage(dilated_image, "combined with morphological operations")
-
     # Utilising simpleblobtdetector on the mask to define keypoints.
     blobDetector = buildDetector()
     keypoints = blobDetector.detect(mask)
-
-    # drawBoundingboxes(image,keypoints)
 
     return keypoints
 
@@ -144,7 +92,6 @@ def buildDetector(minArea = 20):
         detector = cv2.SimpleBlobDetector(params)
     else : 
         detector = cv2.SimpleBlobDetector_create(params)
-
     return detector
 
 
@@ -176,8 +123,8 @@ def drawBoundingboxes(img, keypoints):
         # Draws a rectangle around the keypoint
         cv2.rectangle(img, topLeft, bottomRight, (0,0,255), 2)
 
-    # Displays the results
-    # drawImage(img, "Edge-detection")
+    # Displays the results (For debugging)
+    drawImage(img, "Edge-detection")
     
     return boundingBoxes
 
@@ -197,23 +144,21 @@ def openImagesForModel(folder_path):
 
         # Check for valid image extensions
         if filename.lower().endswith((".jpg", ".jpeg", ".png")):
-            
             image_path = os.path.join(folder_path, filename)
             image = openImage(image_path)
-
             boundingboxes = []
 
+            # Used to calculate runtime
             start = time.time()
 
             edges = findEdges(image)
             boundingboxes = drawBoundingboxes(image, edges)
 
             end = time.time()
-
             timeSpent = end - start
 
+            # Adds current runtime to list
             timePlotPoints.append(timeSpent)
-
             imageData[image_path] = boundingboxes
 
     return imageData, timePlotPoints
