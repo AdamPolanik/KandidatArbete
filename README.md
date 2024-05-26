@@ -6,8 +6,7 @@
 - [Technologies Used](#technologies-used)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+- [Limitations](#Limitations)
 - [Acknowledgements](#acknowledgements)
 
 ## Introduction
@@ -22,7 +21,7 @@ The primary objective of this project is to evaluate the performance of both met
 
 ## Technologies Used
 - Programming Language: Python
-- Tools: OpenCv, 
+- Tools: OpenCv, Roboflow, Ultralytics
 
 ## Installation
 
@@ -40,3 +39,15 @@ python3 testProgramYOLO.py
 
 # Run Edge-detection
 python3 testProgramEdgeDetection.py
+
+```
+## Usage
+
+## Limitations
+A big limiting factor for this study is the very simple implementation of the edge-detection based detection model. A more advanced implementation or the use of a different edge detection algorithm might have yielded better results. Additionally, incorporating color information, given the bright and saturated colors of climbing holds, could potentially enhance the performance of the edge detection approach. Parameters in the blobDetector could also be fine tuned to increase accuracy.
+
+Another limitation pertained to the training dataset used for the YOLO model. The dataset was selected primarily for its availability and the constraints of time and cost. While it was adequate for the scope of this study, a more extensive dataset with greater variability in lighting conditions and climbing hold types could improve the YOLO model's performance. We observed that the model struggled with images of lower quality or dim lighting, and it also had difficulty accurately detecting holds in images with people, particularly when they wore brightly colored clothing. Future improvements could focus on expanding the dataset to include such challenging scenarios and further developing the models to handle these edge cases more effectively.
+
+## Acknowledgements
+Supervisor: Mateus De Oliveira Oliveira
+University: Stockholm University - Department of Computer and Systems Sciences
